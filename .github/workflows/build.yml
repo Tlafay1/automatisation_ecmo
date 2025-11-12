@@ -1,6 +1,5 @@
 name: Build and Release Installer
 
-# Se déclenche uniquement lors de la création d'une release
 on:
   release:
     types: [published]
@@ -10,52 +9,44 @@ jobs:
     name: Build Windows Installer
     runs-on: windows-latest
     permissions:
-      contents: write # Nécessaire pour uploader l'asset dans la release
+      contents: write
 
     steps:
       # 1. Récupération du code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Installation de Python
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      # 2. Création de l'exe avec PyInstaller (Action native)
+      # Remplace setup-python + pip install + pyinstaller command
+      - name: Create Executable
+        uses: sayyid5416/pyinstaller@v1
         with:
-          python-version: '3.11' # Adaptez selon votre version préférée
+          python_ver: '3.11'
+          # Adaptez le chemin si votre requirements.txt est ailleurs (ex: src/requirements.txt)
+          requirements: 'requirements.txt' 
+          # On passe ici les arguments que vous aviez dans votre commande manuelle.
+          # Note : On inclut "main.py" à la fin des options car on n'utilise pas de fichier .spec ici.
+          options: --noconfirm --onedir --windowed --clean --name "main" main.py
 
-      # 3. Installation des dépendances
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyinstaller
-          if (Test-Path requirements.txt) { pip install -r requirements.txt }
+      # 3. Compilation Inno Setup (Action native)
+      # Remplace choco install + ISCC command
+      - name: Compile .ISS to .EXE Installer
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+        with:
+          path: setup.iss
+          # On injecte ici la version de la release GitHub dans la variable AppVersion
+          options: /DAppVersion=${{ github.ref_name }}
 
-      # 4. Création de l'exe avec PyInstaller
-      # Note: --onedir crée un dossier. Assurez-vous que votre setup.iss pointe bien vers le bon dossier dist.
-      - name: Build with PyInstaller
-        run: |
-          pyinstaller --noconfirm --onedir --windowed --clean --name "main" main.py
-
-      # 5. Compilation de l'installeur Inno Setup
-      # Nous utilisons "choco" (déjà présent sur les runners GitHub) pour installer ISCC
-      - name: Compile Inno Setup Script
-        run: |
-          choco install innosetup
-          # On lance la compilation. 
-          # L'astuce /DAppVersion permet de remplacer la version du fichier .iss par le tag de la release (ex: v1.0.0)
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/DAppVersion=${{ github.ref_name }}" setup.iss
-
-      # 6. Renommer l'artefact pour qu'il soit propre (Optionnel mais conseillé)
-      # Le nom dépend de OutputBaseFilename dans votre fichier setup.iss
-      # Ici on cherche le fichier généré dans le dossier Output (par défaut d'Inno Setup)
+      # 4. Localisation du fichier de sortie (Inchangé, nécessaire pour l'étape suivante)
       - name: Locate Output File
         id: locate_file
         run: |
+          # Inno Setup place par défaut la sortie dans le dossier "Output"
           $setupFile = Get-ChildItem -Path Output -Filter *.exe | Select-Object -First 1
           echo "setup_path=$($setupFile.FullName)" >> $env:GITHUB_OUTPUT
           echo "setup_name=$($setupFile.Name)" >> $env:GITHUB_OUTPUT
 
-      # 7. Upload de l'installeur dans la Release GitHub
+      # 5. Upload dans la Release (Inchangé)
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
