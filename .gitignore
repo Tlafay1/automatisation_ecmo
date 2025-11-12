@@ -1,5 +1,5 @@
 TexLivePortable/
-venv/
+*venv*/
 dist/
 __pycache__/
 *.pyc
@@ -13,3 +13,4 @@ JURIDIQUE/
 *.xlsx
 *.zip
 *.tex
+Output/

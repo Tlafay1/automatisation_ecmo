@@ -1,0 +1,1 @@
+pyinstaller --noconfirm --onedir --windowed --clean --name "main" main.py
