@@ -27,6 +27,7 @@ jobs:
           # On passe ici les arguments que vous aviez dans votre commande manuelle.
           # Note : On inclut "main.py" à la fin des options car on n'utilise pas de fichier .spec ici.
           options: --noconfirm --onedir --windowed --clean --name "main" main.py
+          spec: 'main.spec'
 
       # 3. Compilation Inno Setup (Action native)
       # Remplace choco install + ISCC command
