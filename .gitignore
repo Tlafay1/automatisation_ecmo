@@ -1,0 +1,15 @@
+TexLivePortable/
+venv/
+dist/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.aux
+build/
+*.db
+JURIDIQUE/
+*.xlsx
+*.zip
+*.tex
