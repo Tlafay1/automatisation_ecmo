@@ -5,12 +5,21 @@ import os
 
 import globals
 
+from pathlib import Path
+
+
+
+
 class EntrepriseDatabase:
     def __init__(self, db_path=globals.DATA_DIR + 'entreprise.db'):
+        
+
         self.conn = None
         self.cursor = None
         self.db_path = db_path
-
+        
+        db_path = Path(self.db_path)
+        db_path.parent.mkdir(parents=True, exist_ok=True)
     def open_connection(self):
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()

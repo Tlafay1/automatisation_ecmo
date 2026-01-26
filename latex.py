@@ -7,9 +7,9 @@ from pathlib import Path
 # Chemin vers TeXLivePortable/bin
 import sys
 
-base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
-TEXLIVE_PATH = os.path.join(base_path, "TeXLivePortable", "bin", "windows")  
-os.environ["PATH"] = TEXLIVE_PATH + os.pathsep + os.environ["PATH"]
+# base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+# TEXLIVE_PATH = os.path.join(base_path, "TeXLivePortable", "bin", "windows")  
+# os.environ["PATH"] = TEXLIVE_PATH + os.pathsep + os.environ["PATH"]
 
 
 

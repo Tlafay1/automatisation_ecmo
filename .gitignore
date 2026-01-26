@@ -10,6 +10,5 @@ __pycache__/
 build/
 *.db
 JURIDIQUE/
-*.xlsx
 *.zip
 *.tex
