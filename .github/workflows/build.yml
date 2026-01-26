@@ -1,0 +1,61 @@
+name: Build and Release Installer
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number for the release'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build:
+    name: Build Windows Installer
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      # 1. Récupération du code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Création de l'exe avec PyInstaller (Action native)
+      # Remplace setup-python + pip install + pyinstaller command
+      - name: Create Executable
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          python_ver: '3.11'
+          # Adaptez le chemin si votre requirements.txt est ailleurs (ex: src/requirements.txt)
+          requirements: 'requirements.txt' 
+          # On passe ici les arguments que vous aviez dans votre commande manuelle.
+          # Note : On inclut "main.py" à la fin des options car on n'utilise pas de fichier .spec ici.
+          options: --noconfirm --onedir --windowed --clean --name "main" main.py
+          spec: 'main.spec'
+
+      # 3. Compilation Inno Setup (Action native)
+      # Remplace choco install + ISCC command
+      - name: Compile .ISS to .EXE Installer
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+        with:
+          path: installer.iss
+          # On injecte ici la version de la release GitHub dans la variable AppVersion
+          options: /DAppVersion=${{ github.ref_name }}
+
+      # 4. Localisation du fichier de sortie (Inchangé, nécessaire pour l'étape suivante)
+      - name: Locate Output File
+        id: locate_file
+        run: |
+          # Inno Setup place par défaut la sortie dans le dossier "Output"
+          $setupFile = Get-ChildItem -Path Output -Filter *.exe | Select-Object -First 1
+          echo "setup_path=$($setupFile.FullName)" >> $env:GITHUB_OUTPUT
+          echo "setup_name=$($setupFile.Name)" >> $env:GITHUB_OUTPUT
+
+      # 5. Upload dans la Release (Inchangé)
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ steps.locate_file.outputs.setup_path }}
